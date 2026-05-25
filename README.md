@@ -1,4 +1,4 @@
-# all2api
+# all2api（cursor，tabbit 已失效）
 
 **all2api** 是一个用 Go 编写的 API 网关。它的目标是把不同上游服务（目前支持 Cursor 和 Zed）的非标准化 API 接口，统一转换为常见的标准下游协议（如 OpenAI 的 Chat Completions 接口）。
 
