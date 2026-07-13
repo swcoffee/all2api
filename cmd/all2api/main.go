@@ -228,17 +228,9 @@ func updateConfig(filePath string, target string, token string) error {
 	}
 
 	if targetIdx == -1 {
-		targetYaml := fmt.Sprintf(`
-type: "%s"
-auth:
-  kind: "token"
-  token: "%s"`, target, token)
-		var targetNode yaml.Node
-		yaml.Unmarshal([]byte(targetYaml), &targetNode)
-
 		upms.Content = append(upms.Content,
 			&yaml.Node{Kind: yaml.ScalarNode, Value: target},
-			targetNode.Content[0],
+			newUpstreamNode(target, token),
 		)
 	} else {
 		targetNode := upms.Content[targetIdx]
@@ -250,14 +242,9 @@ auth:
 			}
 		}
 		if authIdx == -1 {
-			authYaml := fmt.Sprintf(`
-kind: "token"
-token: "%s"`, token)
-			var authNode yaml.Node
-			yaml.Unmarshal([]byte(authYaml), &authNode)
 			targetNode.Content = append(targetNode.Content,
 				&yaml.Node{Kind: yaml.ScalarNode, Value: "auth"},
-				authNode.Content[0],
+				newTokenAuthNode(token),
 			)
 		} else {
 			authNode := targetNode.Content[authIdx]
@@ -288,4 +275,28 @@ token: "%s"`, token)
 	enc.Close()
 
 	return os.WriteFile(filePath, out.Bytes(), 0644)
+}
+
+func newUpstreamNode(target string, token string) *yaml.Node {
+	return &yaml.Node{
+		Kind: yaml.MappingNode,
+		Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Value: "type"},
+			{Kind: yaml.ScalarNode, Value: target},
+			{Kind: yaml.ScalarNode, Value: "auth"},
+			newTokenAuthNode(token),
+		},
+	}
+}
+
+func newTokenAuthNode(token string) *yaml.Node {
+	return &yaml.Node{
+		Kind: yaml.MappingNode,
+		Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Value: "kind"},
+			{Kind: yaml.ScalarNode, Value: "token"},
+			{Kind: yaml.ScalarNode, Value: "token"},
+			{Kind: yaml.ScalarNode, Value: token},
+		},
+	}
 }

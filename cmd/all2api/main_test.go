@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestParseConfigFlagDefaultAndOverrides(t *testing.T) {
@@ -78,5 +80,78 @@ func TestResolveConfigPathPrefersDockerMountedConfig(t *testing.T) {
 	got = resolveConfigPath("explicit.yaml", true)
 	if got != "explicit.yaml" {
 		t.Fatalf("resolved = %q", got)
+	}
+}
+
+func TestUpdateConfigDoesNotPanicWithQuotedToken(t *testing.T) {
+	cfgPath := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(cfgPath, []byte("server: {}\n"), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	token := `abc"def`
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("updateConfig panicked: %v", r)
+		}
+	}()
+
+	if err := updateConfig(cfgPath, "swcoffee", token); err != nil {
+		t.Fatalf("updateConfig: %v", err)
+	}
+
+	data, err := os.ReadFile(cfgPath)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	var root yaml.Node
+	if err := yaml.Unmarshal(data, &root); err != nil {
+		t.Fatalf("unmarshal yaml: %v", err)
+	}
+	body := root.Content[0]
+
+	var upstreams *yaml.Node
+	for i := 0; i < len(body.Content); i += 2 {
+		if body.Content[i].Value == "upstreams" {
+			upstreams = body.Content[i+1]
+			break
+		}
+	}
+	if upstreams == nil {
+		t.Fatal("missing upstreams")
+	}
+
+	var target *yaml.Node
+	for i := 0; i < len(upstreams.Content); i += 2 {
+		if upstreams.Content[i].Value == "swcoffee" {
+			target = upstreams.Content[i+1]
+			break
+		}
+	}
+	if target == nil {
+		t.Fatal("missing upstream swcoffee")
+	}
+
+	var auth *yaml.Node
+	for i := 0; i < len(target.Content); i += 2 {
+		if target.Content[i].Value == "auth" {
+			auth = target.Content[i+1]
+			break
+		}
+	}
+	if auth == nil {
+		t.Fatal("missing auth")
+	}
+
+	var gotToken string
+	for i := 0; i < len(auth.Content); i += 2 {
+		if auth.Content[i].Value == "token" {
+			gotToken = auth.Content[i+1].Value
+			break
+		}
+	}
+	if gotToken != token {
+		t.Fatalf("token = %q, want %q", gotToken, token)
 	}
 }

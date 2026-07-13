@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/cloudwego/hertz v0.10.4
+	github.com/google/uuid v1.6.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -15,7 +16,6 @@ require (
 	github.com/cloudwego/gopkg v0.1.4 // indirect
 	github.com/cloudwego/netpoll v0.7.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
