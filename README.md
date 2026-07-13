@@ -53,6 +53,12 @@ upstreams:
 
 ## 🐳 Docker 部署
 
+发布 `v*.*.*` tag 后，GitHub Actions 会自动构建并推送镜像到：
+
+```bash
+ghcr.io/swcoffee/all2api:<tag>
+```
+
 ### 快速启动
 
 1. **启动服务**
